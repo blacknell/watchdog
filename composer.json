@@ -1,0 +1,16 @@
+{
+  "authors": [
+    {
+      "name": "Paul Blacknell",
+      "homepage": "https://github.com/blacknell",
+      "role": "Developer"
+    }
+  ],
+  "require": {
+    "monolog/monolog": "^1.23",
+    "fightbulc/moment": "^1.26.10"
+  },
+  "require-dev": {
+    "phpmd/phpmd": "^2.6"
+  }
+}
