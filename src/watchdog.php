@@ -1,10 +1,15 @@
 <?php
 
+/**
+ * Copyright (c) 2019. Paul Blacknell https://github.com/blacknell
+ */
+
+namespace Blacknell\Watchdog;
+
 use Monolog\Logger;
 use Monolog\Handler\NullHandler;
-use Moment\Moment;
 
-require_once __DIR__ . "/vendor/autoload.php";
+use Moment\Moment;
 
 class Watchdog
 {

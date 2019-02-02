@@ -1,4 +1,8 @@
 {
+  "name": "blacknell/watchdog",
+  "description": "Simple watchdog to keep a process alive",
+  "minimum-stability": "stable",
+  "license": "MIT",
   "authors": [
     {
       "name": "Paul Blacknell",
@@ -7,10 +11,20 @@
     }
   ],
   "require": {
-    "monolog/monolog": "^1.23",
-    "fightbulc/moment": "^1.26.10"
+    "monolog/monolog": "^1.24",
+    "fightbulc/moment": "^1.29.0"
   },
   "require-dev": {
     "phpmd/phpmd": "^2.6"
+  },
+  "autoload": {
+    "psr-4": {
+      "Blacknell\\Watchdog\\": "src/"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "Blacknell\\Watchdog\\": "src/"
+    }
   }
 }

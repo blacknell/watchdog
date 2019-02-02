@@ -1,8 +1,10 @@
 <?php
 
-require "vendor/autoload.php";
+/**
+ * Copyright (c) 2019. Paul Blacknell https://github.com/blacknell
+ */
 
-require_once __DIR__ . "/watchdog.php";
+require __DIR__.'/../vendor/autoload.php';
 
 use Monolog\Logger;
 use Monolog\Handler\StreamHandler;
@@ -10,6 +12,8 @@ use Monolog\Handler\NullHandler;
 use Monolog\Formatter\LineFormatter;
 
 use Moment\Moment;
+
+use Blacknell\Watchdog\Watchdog;
 
 // sample file demonstrating how to call and use the watchdog
 
@@ -40,7 +44,7 @@ catch (\Exception $e) {
 	$logHandler = new NullHandler(Logger::DEBUG);
 }
 
-$wrapper = new Watchdog($log);
+$wrapper = new Blacknell\Watchdog\Watchdog($log);
 
 $wrapper->watch(
 	'/bin/ls',                     // replace this with the command that starts your long live process
