@@ -3,7 +3,7 @@
 [![Latest Unstable Version](https://poser.pugx.org/blacknell/watchdog/v/unstable)](https://packagist.org/packages/blacknell/watchdog)
 [![License](https://poser.pugx.org/blacknell/watchdog/license)](https://packagist.org/packages/blacknell/watchdog)
 
-A simple watchdog to monitor and keep alive a process. Your process should update a watch file such as /var/tmp/myprocess.watchdog at regular intervals. The watchdog checks this is being updated and if not assumes it is hung. The watchdog then attempts to kill any matching prcoesses and restart a new one.
+A simple watchdog to monitor and keep alive a process. Your process should update a watch file such as `/var/tmp/myprocess.watchdog` at regular intervals. The watchdog checks this is being updated and if not assumes it is hung. The watchdog then attempts to kill any matching prcoesses and restart a new one.
 ## Installation
 
 Install the latest version with
