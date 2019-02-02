@@ -1,38 +1,17 @@
 # Watchdog
-Simple watchdog to monitor and keep alive a process
+[![Latest Stable Version](https://poser.pugx.org/blacknell/watchdog/v/stable)](https://packagist.org/packages/blacknell/watchdog)
+[![Latest Unstable Version](https://poser.pugx.org/blacknell/watchdog/v/unstable)](https://packagist.org/packages/blacknell/watchdog)
+[![License](https://poser.pugx.org/blacknell/watchdog/license)](https://packagist.org/packages/blacknell/watchdog)
 
-## Git Repository
-To add watchdog to an existing project execute
+A simple watchdog to monitor and keep alive a process
+## Installation
 
-#### Add to Project
+Install the latest version with
 ```
-git submodule add git@github.com:blacknell/watchdog.git
-git commit -am 'added watchdog submodule'
-git push origin master
+$ composer require blacknell/watchdog
 ```
-
-Run composer to install library dependencies.
-```$xslt
-cd watchdog
-composer install
-```
-
-#### Incorporate changes from Watchdog project
-
-To pull in upstream changes from watchdog into this project
-```
-cd watchdog
-git fetch
-git merge origin/master
-```
-
-#### Clone your project
-
-Cloning a project with submodules requires extra steps
-```
-git clone git@github.com:blacknell/autotweet.git
-git submodule init
-git submodule update
-```
-
-Refer to [Github Books ](https://git-scm.com/book/en/v2/Git-Tools-Submodules) for further information
+## Sample code
+See [example/wrapper.php](https://github.com/blacknell/watchdog/blob/master/example/wrapper.php)
+## Logging
+PSR-3 logging is supported via [monolog/monolog](https://github.com/Seldaek/monolog) by passing 
+an optional `Logger` object to the API constructor.
