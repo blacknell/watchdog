@@ -51,4 +51,3 @@ $wrapper->watch(
 	"mygrepstring",             // replace this with a script that will be grep'd to see if it is still running
 	'/tmp/mywatchdog.watchdog',   // your script should touch this file regularly
 	15);                     // and this is how regularly (worst case)
-
