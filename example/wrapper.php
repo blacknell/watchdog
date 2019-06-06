@@ -32,22 +32,22 @@ try {
 		throw new \LogicException ('Could not open log file for writing');
 	}
 	fclose($f);
-	$logHandler = new StreamHandler($logfile, Logger::DEBUG);
-	$logHandler->setFormatter(new LineFormatter(null, Moment::ATOM));
+	$logHandler = new StreamHandler($logfile, Logger::INFO);    // change to DEBUG for testing
+	$logHandler->setFormatter(new LineFormatter(null, Watchdog::LOG_DATE_FORMAT));
 	$log->pushHandler($logHandler);
 
 }
 catch (\LogicException $e) {
-	$logHandler = new NullHandler(Logger::DEBUG);
+	$logHandler = new NullHandler(Logger::INFO);
 }
 catch (\Exception $e) {
-	$logHandler = new NullHandler(Logger::DEBUG);
+	$logHandler = new NullHandler(Logger::INFO);
 }
 
 $wrapper = new Blacknell\Watchdog\Watchdog($log);
 
 $wrapper->watch(
-	'/bin/ls',                     // replace this with the command that starts your long live process
+	'/bin/ls',                     // replace this with the command that starts your long lived process
 	"mygrepstring",             // replace this with a script that will be grep'd to see if it is still running
 	'/tmp/mywatchdog.watchdog',   // your script should touch this file regularly
-	15);                     // and this is how regularly (worst case)
+	15);                     // and this is how regularly (worst case) in seconds
