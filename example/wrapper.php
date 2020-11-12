@@ -47,7 +47,8 @@ catch (\Exception $e) {
 $wrapper = new Blacknell\Watchdog\Watchdog($log);
 
 $wrapper->watch(
-	'/bin/ls',                     // replace this with the command that starts your long lived process
-	"mygrepstring",             // replace this with a script that will be grep'd to see if it is still running
-	'/tmp/mywatchdog.watchdog',   // your script should touch this file regularly
-	15);                     // and this is how regularly (worst case) in seconds
+'/bin/ls',                     // replace this with the command that starts your long lived process
+    "mygrepstring",            // replace this with a script that will be grep'd to see if it is still running
+    '/tmp/mywatchdog.watchdog',   // your script should touch this file regularly
+    15,                       // and this is how regularly (worst case) in seconds
+    ['/home/pi/myscript.php']);             // changing any of these files will force a restart
