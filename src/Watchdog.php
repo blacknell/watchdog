@@ -69,7 +69,7 @@ class Watchdog
             $this->logger->debug(sprintf("Watchdog file last touched %s, %s", $fileModificationTime->format(Watchdog::LOG_DATE_FORMAT), $fileModificationTime->fromNow()->getRelative()));
 
             if (($now->getTimestamp() - $fileModificationTime->getTimestamp()) > $watchdogMaxAge) {
-                $this->logger->notice(sprintf("Watchdog file %s is more than %u seconds old. Last touched %s, %s", $watchdogFile, $watchdogMaxAge, $fileModificationTime->format(Watchdog::LOG_DATE_FORMAT), $fileModificationTime->fromNow()->getRelative()), [$hostName, $ipAddress]);
+                $this->logger->notice(sprintf("Watchdog file %s is more than %u seconds old. Last touched %s, %s. Restarting.", $watchdogFile, $watchdogMaxAge, $fileModificationTime->format(Watchdog::LOG_DATE_FORMAT), $fileModificationTime->fromNow()->getRelative()), [$hostName, $ipAddress]);
                 $watchdogDead = true;
             }
         }
@@ -90,7 +90,7 @@ class Watchdog
                         $fileModificationTime = new Moment();
                         $fileModificationTime->setTimestamp(filemtime($watchfile));
                         if ($fileModificationTime->isAfter($processStartTime)) {
-                            $this->logger->notice(sprintf("Watch file %s changed %s since process started %s", $watchfile, $fileModificationTime->format(Watchdog::LOG_DATE_FORMAT), $processStartTime->format(Watchdog::LOG_DATE_FORMAT)), [$hostName, $ipAddress]);
+                            $this->logger->notice(sprintf("Watch file %s changed %s since process started %s. Restarting.", $watchfile, $fileModificationTime->format(Watchdog::LOG_DATE_FORMAT), $fileModificationTime->from($processStartTime)->getRelative()), [$hostName, $ipAddress]);
                             $watchFilesHaveChanged = true;
                             break 2;
                         }
