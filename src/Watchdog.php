@@ -6,6 +6,7 @@
 
 namespace Blacknell\Watchdog;
 
+use Moment\MomentException;
 use Monolog\Logger;
 use Monolog\Handler\NullHandler;
 
@@ -17,42 +18,41 @@ class Watchdog
 
     private $logger;
 
-	public function __construct(\Monolog\Logger $logger = null)
-	{
-		if (isset($logger) && $logger) {
-			@assert(is_a($logger, '\Monolog\Logger'));
-			$this->logger = $logger;
-		}
-		else {
-			$this->logger = new Logger('watchdog');
-			$logHandler = new NullHandler();
-			$this->logger->pushHandler($logHandler);
-		}
-		$this->logger->debug(sprintf("Watchdog '%s' starting.", $this->logger->getName()));
-	}
+    public function __construct(Logger $logger = null)
+    {
+        if (isset($logger) && $logger) {
+            @assert(is_a($logger, '\Monolog\Logger'));
+            $this->logger = $logger;
+        } else {
+            $this->logger = new Logger('watchdog');
+            $logHandler = new NullHandler();
+            $this->logger->pushHandler($logHandler);
+        }
+        $this->logger->debug(sprintf("Watchdog '%s' starting.", $this->logger->getName()));
+    }
 
-	function __destruct()
-	{
-		$this->logger->debug(sprintf("Watchdog '%s' exiting.", $this->logger->getName()));
-	}
+    function __destruct()
+    {
+        $this->logger->debug(sprintf("Watchdog '%s' exiting.", $this->logger->getName()));
+    }
 
     /**
      * @param $watchScript      full command to re-start script
      * @param $watchScriptGrep  grep'able string for the script we're watching
      * @param $watchdogFile     the file that the script keeps touching
      * @param $watchdogMaxAge   the interval in seconds at which it should always be touched
-     * @param $watchfiles       list of filenames to be checked for changes since process started
+     * @param $watchFiles       list of filenames to be checked for changes since process started
      *
-     * @throws \Moment\MomentException
+     * @throws MomentException
      */
-    public function watch($watchScript, $watchScriptGrep, $watchdogFile, $watchdogMaxAge, $watchfiles = [])
+    public function watch($watchScript, $watchScriptGrep, $watchdogFile, $watchdogMaxAge, $watchFiles = [])
     {
         @assert(is_string($watchScript));
         @assert(is_string($watchScriptGrep));
         @assert(is_string($watchdogFile));
         @assert(is_int($watchdogMaxAge));
         @assert($watchdogMaxAge > 0);
-        @assert(is_array($watchfiles));
+        @assert(is_array($watchFiles));
 
         $watchdogDead = false;
 
@@ -61,7 +61,7 @@ class Watchdog
 
         if (!@filemtime($watchdogFile)) {
             $watchdogDead = true;
-            $this->logger->notice(sprintf("Watchdog file %s does not exist" . PHP_EOL, $watchdogFile), [$hostName, $ipAddress]);
+            $this->logger->notice(sprintf("Watchdog file %s does not exist" . PHP_EOL, $watchdogFile), [$hostName, $ipAddress, getmypid()]);
         } else {
             $fileModificationTime = new Moment();
             $fileModificationTime->setTimestamp(filemtime($watchdogFile));
@@ -69,28 +69,26 @@ class Watchdog
             $this->logger->debug(sprintf("Watchdog file last touched %s, %s", $fileModificationTime->format(Watchdog::LOG_DATE_FORMAT), $fileModificationTime->fromNow()->getRelative()));
 
             if (($now->getTimestamp() - $fileModificationTime->getTimestamp()) > $watchdogMaxAge) {
-                $this->logger->notice(sprintf("Watchdog file %s is more than %u seconds old. Last touched %s, %s. Restarting.", $watchdogFile, $watchdogMaxAge, $fileModificationTime->format(Watchdog::LOG_DATE_FORMAT), $fileModificationTime->fromNow()->getRelative()), [$hostName, $ipAddress]);
+                $this->logger->notice(sprintf("Watchdog file %s is more than %u seconds old. Last touched %s, %s. Restarting.", $watchdogFile, $watchdogMaxAge, $fileModificationTime->format(Watchdog::LOG_DATE_FORMAT), $fileModificationTime->fromNow()->getRelative()), [$hostName, $ipAddress, getmypid()]);
                 $watchdogDead = true;
             }
         }
 
         $watchFilesHaveChanged = false;
-        if (count($watchfiles) > 0) {
-            $this->logger->debug("Checking for changes to files since process was started", $watchfiles);
+        if (count($watchFiles) > 0) {
+            $this->logger->debug("Checking for changes to files since process was started", $watchFiles);
             $processes = array();
             exec(sprintf('ps -eo lstart,cmd|grep %s|grep -v grep', $watchScriptGrep), $processes);
             // for each matching process find it's start time
             // and compare to the files we've been asked to check against
             foreach ($processes as $process) {
                 $processStartTime = new Moment(substr($process, 0, 24));
-                foreach ($watchfiles as $watchfile) {
-                    $fileModificationTime = new Moment();
-                    $fileModificationTime->setTimestamp(filemtime($watchfile));
-                    if (@filemtime($watchfile)) {
+                foreach ($watchFiles as $watchFile) {
+                    if (@filemtime($watchFile)) {
                         $fileModificationTime = new Moment();
-                        $fileModificationTime->setTimestamp(filemtime($watchfile));
+                        $fileModificationTime->setTimestamp(filemtime($watchFile));
                         if ($fileModificationTime->isAfter($processStartTime)) {
-                            $this->logger->notice(sprintf("Watch file %s changed %s since process started %s. Restarting.", $watchfile, $fileModificationTime->format(Watchdog::LOG_DATE_FORMAT), $fileModificationTime->from($processStartTime)->getRelative()), [$hostName, $ipAddress]);
+                            $this->logger->notice(sprintf("Watch file %s changed %s since process started %s. Restarting.", $watchFile, $fileModificationTime->format(Watchdog::LOG_DATE_FORMAT), $processStartTime->from($fileModificationTime)->getRelative()), [$hostName, $ipAddress, getmypid()]);
                             $watchFilesHaveChanged = true;
                             break 2;
                         }
@@ -106,7 +104,7 @@ class Watchdog
             exec(sprintf('ps ax|grep %s|grep -v grep', $watchScriptGrep), $processes);
             foreach ($processes as $process) {
                 $item = Watchdog::getProcess($process);
-                $this->logger->info(sprintf("Asking process %s to exit gracefully", $item));
+                $this->logger->info(sprintf("Asking process %s to exit gracefully", $item), [$hostName, $ipAddress, getmypid()]);
                 exec(sprintf("kill -1 %s", $item)); // 1 is equiv to HUP or SIGHUP
             }
             sleep(2);
@@ -116,7 +114,7 @@ class Watchdog
             exec(sprintf('ps ax|grep %s|grep -v grep', $watchScriptGrep), $processes);
             foreach ($processes as $process) {
                 $item = Watchdog::getProcess($process);
-                $this->logger->info(sprintf("Forcing process %s to exit", $item));
+                $this->logger->info(sprintf("Forcing process %s to exit", $item), [$hostName, $ipAddress, getmypid()]);
                 exec(sprintf("kill -9 %s", $item));
             }
             sleep(2);
@@ -124,7 +122,7 @@ class Watchdog
             // now restart the script
 
             $processScript = sprintf("%s > /dev/null &", $watchScript); # > /dev/null &
-            $this->logger->info(sprintf("Starting a new process with '%s'", $processScript));
+            $this->logger->info(sprintf("Starting a new process with '%s'", $processScript), [$hostName, $ipAddress, getmypid()]);
             echo exec($processScript);
             $processes = array();
             exec(sprintf('ps ax|grep %s|grep -v grep', $watchScriptGrep), $processes);
@@ -141,16 +139,15 @@ class Watchdog
 
     /**
      * @param $process single line of ps ax output
+     *
      * @return mixed pid of the process
      */
     private static function getProcess($process)
     {
         $process = trim(preg_replace('/\s\s+/', ' ', $process));
         $items = explode(' ', $process);
+
         return $items[0];
     }
 
 }
-
-
-
