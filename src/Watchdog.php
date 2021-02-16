@@ -103,7 +103,7 @@ class Watchdog
             // first find processes and ask them nicely
             foreach ($processes as $process) {
                 $this->logger->info(sprintf("Asking process %s to exit gracefully", $process['pid']), [[$this->hostName, $this->ipAddress, getmypid()], $process]);
-//                exec(sprintf("kill -1 %s", $process['pid'])); // 1 is equiv to HUP or SIGHUP
+                exec(sprintf("kill -1 %s > /dev/null 2>&1", $process['pid'])); // 1 is equiv to HUP or SIGHUP
             }
             sleep(2);
 
@@ -114,13 +114,13 @@ class Watchdog
 
             foreach ($processes as $process) {
                 $this->logger->info(sprintf("Forcing process %s to exit", $process['pid']), [[$this->hostName, $this->ipAddress, getmypid()], $process]);
-//                exec(sprintf("kill -9 %s", $process['pid']));
+                exec(sprintf("kill -9 %s > /dev/null 2>&1", $process['pid']));
             }
             sleep(2);
 
             // now restart the script
 
-            $processScript = sprintf("%s > /dev/null &", $watchScript);
+            $processScript = sprintf("%s > /dev/null 2>&1 &", $watchScript);
             $this->logger->info(sprintf("Starting a new process with '%s'", $processScript), [$this->hostName, $this->ipAddress, getmypid()]);
             exec($processScript);
 
