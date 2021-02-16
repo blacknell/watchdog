@@ -33,13 +33,12 @@ class Watchdog
 
         $this->hostName = gethostname();
         $this->ipAddress = gethostbyname($this->hostName);
-
-        $this->logger->debug(sprintf("Watchdog '%s' starting.", $this->logger->getName()), [$this->hostName, $this->ipAddress, getmypid()]);
+        $this->logger->debug("Watchdog starting", [$this->hostName, $this->ipAddress, getmypid()]);
     }
 
     function __destruct()
     {
-        $this->logger->debug(sprintf("Watchdog '%s' exiting.", $this->logger->getName()), [$this->hostName, $this->ipAddress, getmypid()]);
+        $this->logger->debug("Watchdog exiting", [$this->hostName, $this->ipAddress, getmypid()]);
     }
 
     /**
