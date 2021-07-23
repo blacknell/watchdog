@@ -97,7 +97,7 @@ class Watchdog
             }
         }
 
-        if ($watchdogDead || $watchFilesHaveChanged) {
+        if ($watchdogDead || $watchFilesHaveChanged || count($processes == 0)) {
 
             // first find processes and ask them nicely
             foreach ($processes as $process) {
