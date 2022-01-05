@@ -123,7 +123,7 @@ class Watchdog
 
             // now restart the script
 
-            $processScript = sprintf("%s", $watchScript);
+            $processScript = sprintf("%s &", $watchScript);
             $this->logger->info(sprintf("Starting a new process with '%s'", $processScript), [$this->hostName, $this->ipAddress, getmypid()]);
             exec($processScript);
             sleep(2);
