@@ -101,6 +101,9 @@ class Watchdog
         if ($watchdogDead || $watchFilesHaveChanged || count($processes) == 0) {
 
             // first find processes and ask them nicely
+            $processlist = array();
+            exec(sprintf('ps -eo pid,lstart,cmd|grep %s|grep -v grep', $watchScriptGrep), $processlist);
+            $processes = self::getProcesses($processlist);
             foreach ($processes as $process) {
                 $this->logger->info(sprintf("Asking process %s to exit gracefully", $process['pid']), [[$this->hostName, $this->ipAddress, getmypid()], $process]);
                 exec(sprintf("kill -1 %s > /dev/null 2>&1", $process['pid'])); // 1 is equiv to HUP or SIGHUP
