@@ -72,25 +72,26 @@ class Watchdog
             }
         }
 
-        // get all running processes that match the grep string
-        $processlist = array();
-        exec(sprintf('ps -eo pid,lstart,cmd|grep %s|grep -v grep', $watchScriptGrep), $processlist);
-        $processes = self::getProcesses($processlist);
-        $this->logger->debug(sprintf("Running processes that match grep '%s'", $watchScriptGrep), [$processlist, $processes]);
-
-        $watchFilesHaveChanged = false;
-        if (count($watchFiles) > 0) {
-            // for each matching process compare it's start time to the files we've been asked to check against
-            $this->logger->debug("Checking for changes to files since process was started", $watchFiles);
-            foreach ($processes as $process) {
-                foreach ($watchFiles as $watchFile) {
-                    if (@filemtime($watchFile)) {
-                        $fileModificationTime = new Moment();
-                        $fileModificationTime->setTimestamp(filemtime($watchFile));
-                        if ($fileModificationTime->isAfter($process['startTime'])) {
-                            $this->logger->notice(sprintf("Watch file %s changed %s which is later than when process started (%s). Restarting.", $watchFile, $fileModificationTime->format(Watchdog::LOG_DATE_FORMAT), $process['startTime']->from($fileModificationTime)->getRelative()), [$this->hostName, $this->ipAddress, getmypid()]);
-                            $watchFilesHaveChanged = true;
-                            break 2;
+        if (!$watchdogDead) {
+            // get all running processes that match the grep string
+            $processlist = array();
+            exec(sprintf('ps -eo pid,lstart,cmd|grep %s|grep -v grep', $watchScriptGrep), $processlist);
+            $processes = self::getProcesses($processlist);
+            $this->logger->debug(sprintf("Running processes that match grep '%s'", $watchScriptGrep), [$processlist, $processes]);
+            $watchFilesHaveChanged = false;
+            if (count($watchFiles) > 0) {
+                // for each matching process compare it's start time to the files we've been asked to check against
+                $this->logger->debug("Checking for changes to files since process was started", $watchFiles);
+                foreach ($processes as $process) {
+                    foreach ($watchFiles as $watchFile) {
+                        if (@filemtime($watchFile)) {
+                            $fileModificationTime = new Moment();
+                            $fileModificationTime->setTimestamp(filemtime($watchFile));
+                            if ($fileModificationTime->isAfter($process['startTime'])) {
+                                $this->logger->notice(sprintf("Watch file %s changed %s which is later than when process started (%s). Restarting.", $watchFile, $fileModificationTime->format(Watchdog::LOG_DATE_FORMAT), $process['startTime']->from($fileModificationTime)->getRelative()), [$this->hostName, $this->ipAddress, getmypid()]);
+                                $watchFilesHaveChanged = true;
+                                break 2;
+                            }
                         }
                     }
                 }
