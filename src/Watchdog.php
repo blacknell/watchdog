@@ -106,7 +106,7 @@ class Watchdog
             $processes = self::getProcesses($processlist);
             foreach ($processes as $process) {
                 $this->logger->info(sprintf("Asking process %s to exit gracefully", $process['pid']), [[$this->hostName, $this->ipAddress, getmypid()], $process]);
-                exec(sprintf("kill -1 %s > /dev/null 2>&1", $process['pid'])); // 1 is equiv to HUP or SIGHUP
+                exec(sprintf("kill -15 %s > /dev/null 2>&1", $process['pid'])); // 15 is SIGTERM
             }
             sleep(2);
 
