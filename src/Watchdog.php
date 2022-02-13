@@ -33,20 +33,20 @@ class Watchdog
 
         $this->hostName = gethostname();
         $this->ipAddress = gethostbyname($this->hostName);
-        $this->logger->debug("Watchdog starting", [$this->hostName, $this->ipAddress, getmypid()]);
+        $this->logger->debug("Watchdog starting");
     }
 
     function __destruct()
     {
-        $this->logger->debug("Watchdog exiting", [$this->hostName, $this->ipAddress, getmypid()]);
+        $this->logger->debug("Watchdog exiting");
     }
 
     /**
-     * @param string $watchScript     full command to re-start script
+     * @param string $watchScript full command to re-start script
      * @param string $watchScriptGrep grep'able string for the script we're watching
-     * @param string $watchdogFile    the file that the script keeps touching
-     * @param int    $watchdogMaxAge  the interval in seconds at which it should always be touched
-     * @param array  $watchFiles      list of filenames to be checked for changes since process started
+     * @param string $watchdogFile the file that the script keeps touching
+     * @param int $watchdogMaxAge the interval in seconds at which it should always be touched
+     * @param array $watchFiles list of filenames to be checked for changes since process started
      *
      * @throws MomentException
      */
@@ -59,7 +59,7 @@ class Watchdog
 
         if (!@filemtime($watchdogFile)) {
             $watchdogDead = true;
-            $this->logger->notice(sprintf("Watchdog file %s does not exist" . PHP_EOL, $watchdogFile), [$this->hostName, $this->ipAddress, getmypid()]);
+            $this->logger->notice(sprintf("Watchdog file %s does not exist", $watchdogFile));
         } else {
             $fileModificationTime = new Moment();
             $fileModificationTime->setTimestamp(filemtime($watchdogFile));
@@ -67,11 +67,12 @@ class Watchdog
             $this->logger->debug(sprintf("Watchdog file last touched %s, %s", $fileModificationTime->format(Watchdog::LOG_DATE_FORMAT), $fileModificationTime->fromNow()->getRelative()));
 
             if (($now->getTimestamp() - $fileModificationTime->getTimestamp()) > $watchdogMaxAge) {
-                $this->logger->notice(sprintf("Watchdog file %s is more than %u seconds old. Last touched %s, %s. Restarting.", $watchdogFile, $watchdogMaxAge, $fileModificationTime->format(Watchdog::LOG_DATE_FORMAT), $fileModificationTime->fromNow()->getRelative()), [$this->hostName, $this->ipAddress, getmypid()]);
+                $this->logger->notice(sprintf("Watchdog file %s is more than %u seconds old. Last touched %s, %s. Restarting.", $watchdogFile, $watchdogMaxAge, $fileModificationTime->format(Watchdog::LOG_DATE_FORMAT), $fileModificationTime->fromNow()->getRelative()));
                 $watchdogDead = true;
             }
         }
 
+        $processes = array();
         if (!$watchdogDead) {
             // get all running processes that match the grep string
             $processlist = array();
@@ -98,15 +99,23 @@ class Watchdog
             }
         }
 
+        if (!($watchdogDead || $watchFilesHaveChanged) && count($processes) == 0) {
+            $this->logger->notice("No processes running that match grep string",[$watchScriptGrep]);
+        }
+
         if ($watchdogDead || $watchFilesHaveChanged || count($processes) == 0) {
 
             // first find processes and ask them nicely
             $processlist = array();
             exec(sprintf('ps -eo pid,lstart,cmd|grep %s|grep -v grep', $watchScriptGrep), $processlist);
             $processes = self::getProcesses($processlist);
+
+
             foreach ($processes as $process) {
-                $this->logger->info(sprintf("Asking process %s to exit gracefully", $process['pid']), [[$this->hostName, $this->ipAddress, getmypid()], $process]);
-                exec(sprintf("kill -15 %s > /dev/null 2>&1", $process['pid'])); // 15 is SIGTERM
+                $this->logger->info(sprintf("Asking process %s to exit gracefully", $process['pid']));
+                $killCommand = sprintf("kill -15 %s > /dev/null 2>&1", $process['pid']); // 15 is SIGTERM
+                $this->logger->debug('Executing', [$killCommand]);
+                exec($killCommand);
             }
             sleep(2);
 
@@ -114,25 +123,40 @@ class Watchdog
             $processlist = array();
             exec(sprintf('ps -eo pid,lstart,cmd|grep %s|grep -v grep', $watchScriptGrep), $processlist);
             $processes = self::getProcesses($processlist);
-
             foreach ($processes as $process) {
-                $this->logger->info(sprintf("Forcing process %s to exit", $process['pid']), [[$this->hostName, $this->ipAddress, getmypid()], $process]);
-                exec(sprintf("kill -9 %s > /dev/null 2>&1", $process['pid']));
+                $this->logger->info(sprintf("Forcing process %s to exit", $process['pid']));
+                $killCommand = sprintf("kill -9 %s > /dev/null 2>&1", $process['pid']);
+                $this->logger->debug('Executing', [$killCommand]);
+                exec($killCommand);
             }
-            sleep(2);
 
             // now restart the script
 
+            // check first once more. if they're not dead we'll have to abort
+            $processlist = array();
+            exec(sprintf('ps -eo pid,lstart,cmd|grep %s|grep -v grep', $watchScriptGrep), $processlist);
+            $processes = self::getProcesses($processlist);
+            if (count($processes) > 0) {
+                foreach ($processes as $process) {
+                    $this->logger->notice(sprintf("Was unable to kill process %s", $process['pid']), [$process['name']]);
+                }
+                $this->logger->critical("Abandoning watchdog as we couldn't kill existing processes");
+                exit(1);
+            }
+
+
             $processScript = sprintf("%s &", $watchScript);
-            $this->logger->info(sprintf("Starting a new process with '%s'", $processScript), [$this->hostName, $this->ipAddress, getmypid()]);
-            exec($processScript);
-            sleep(2);
+            $this->logger->info(sprintf("Starting a new process with '%s'", $processScript));
+//            exec($processScript);
+            sleep(1);
 
             $processlist = array();
             exec(sprintf('ps -eo pid,lstart,cmd|grep %s|grep -v grep', $watchScriptGrep), $processlist);
             $processes = self::getProcesses($processlist);
             $this->logger->debug(sprintf("%d processes match grep '%s'", count($processes), $watchScriptGrep), $processes);
-
+            if (count($processes) == 0) {
+                $this->logger->warning(sprintf("No processes restarted - none match grep '%s'", $watchScriptGrep));
+            }
         } else {
             $this->logger->debug("Nothing to do");
         }
@@ -150,8 +174,8 @@ class Watchdog
         $processes = array();
         foreach ($processlist as $process) {
             $processes[] = [
-                'pid'       => (int) substr($process, 0, 5),
-                'name'      => substr($process, 31),
+                'pid' => (int)substr($process, 0, 5),
+                'name' => substr($process, 31),
                 'startTime' => new Moment(substr($process, 6, 24)),
             ];
         }
