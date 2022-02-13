@@ -177,10 +177,12 @@ class Watchdog
     {
         $processes = array();
         foreach ($processlist as $process) {
+            $process = ltrim($process);
+            $firstSpace = strpos($process, ' ');
             $processes[] = [
-                'pid' => (int)substr($process, 0, 5),
-                'name' => substr($process, 31),
-                'startTime' => new Moment(substr($process, 6, 24)),
+                'pid' => (int)substr($process, 0, $firstSpace),
+                'name' => substr($process, 26 + $firstSpace),
+                'startTime' => new Moment(substr($process, $firstSpace + 1, 24)),
             ];
         }
 
