@@ -153,7 +153,11 @@ class Watchdog
             $processlist = array();
             exec(sprintf('ps -eo pid,lstart,cmd|grep %s|grep -v grep', $watchScriptGrep), $processlist);
             $processes = self::getProcesses($processlist);
-            $this->logger->debug(sprintf("%d processes match grep '%s'", count($processes), $watchScriptGrep), $processes);
+            $processPids = array();
+            foreach ($processes as $process) {
+                $processPids[] = $process['pid'];
+            }
+                    $this->logger->debug(sprintf("%d processes match grep '%s'", count($processes), $watchScriptGrep), $processPids);
             if (count($processes) == 0) {
                 $this->logger->warning(sprintf("No processes restarted - none match grep '%s'", $watchScriptGrep));
             }
