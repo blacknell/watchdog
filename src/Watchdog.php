@@ -157,7 +157,7 @@ class Watchdog
             foreach ($processes as $process) {
                 $processPids[] = $process['pid'];
             }
-                    $this->logger->debug(sprintf("%d processes match grep '%s'", count($processes), $watchScriptGrep), $processPids);
+            $this->logger->info(sprintf("%d processes match grep '%s'", count($processes), $watchScriptGrep), $processPids);
             if (count($processes) == 0) {
                 $this->logger->warning(sprintf("No processes restarted - none match grep '%s'", $watchScriptGrep));
             }
