@@ -147,7 +147,7 @@ class Watchdog
 
             $processScript = sprintf("%s &", $watchScript);
             $this->logger->info(sprintf("Starting a new process with '%s'", $processScript));
-//            exec($processScript);
+            exec($processScript);
             sleep(1);
 
             $processlist = array();
