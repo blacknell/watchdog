@@ -76,7 +76,7 @@ class Watchdog
         if (!$watchdogDead) {
             // get all running processes that match the grep string
             $processlist = array();
-            exec(sprintf('ps -eo pid,lstart,cmd|grep %s|grep -v grep', $watchScriptGrep), $processlist);
+            exec(sprintf('ps -eo pid,lstart,cmd|grep "%s"|grep -v grep', $watchScriptGrep), $processlist);
             $processes = self::getProcesses($processlist);
             $this->logger->debug(sprintf("Running processes that match grep '%s'", $watchScriptGrep), [$processlist, $processes]);
             $watchFilesHaveChanged = false;
@@ -107,7 +107,7 @@ class Watchdog
 
             // first find processes and ask them nicely
             $processlist = array();
-            exec(sprintf('ps -eo pid,lstart,cmd|grep %s|grep -v grep', $watchScriptGrep), $processlist);
+            exec(sprintf('ps -eo pid,lstart,cmd|grep "%s"|grep -v grep', $watchScriptGrep), $processlist);
             $processes = self::getProcesses($processlist);
 
 
@@ -121,7 +121,7 @@ class Watchdog
 
             // check again to find stuck processes and just kill them
             $processlist = array();
-            exec(sprintf('ps -eo pid,lstart,cmd|grep %s|grep -v grep', $watchScriptGrep), $processlist);
+            exec(sprintf('ps -eo pid,lstart,cmd|grep "%s"|grep -v grep', $watchScriptGrep), $processlist);
             $processes = self::getProcesses($processlist);
             foreach ($processes as $process) {
                 $this->logger->info(sprintf("Forcing process %s to exit", $process['pid']));
@@ -134,7 +134,7 @@ class Watchdog
 
             // check first once more. if they're not dead we'll have to abort
             $processlist = array();
-            exec(sprintf('ps -eo pid,lstart,cmd|grep %s|grep -v grep', $watchScriptGrep), $processlist);
+            exec(sprintf('ps -eo pid,lstart,cmd|grep "%s"|grep -v grep', $watchScriptGrep), $processlist);
             $processes = self::getProcesses($processlist);
             if (count($processes) > 0) {
                 foreach ($processes as $process) {
@@ -151,7 +151,7 @@ class Watchdog
             sleep(1);
 
             $processlist = array();
-            exec(sprintf('ps -eo pid,lstart,cmd|grep %s|grep -v grep', $watchScriptGrep), $processlist);
+            exec(sprintf('ps -eo pid,lstart,cmd|grep "%s"|grep -v grep', $watchScriptGrep), $processlist);
             $processes = self::getProcesses($processlist);
             $processPids = array();
             foreach ($processes as $process) {
